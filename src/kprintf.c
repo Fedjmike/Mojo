@@ -1,6 +1,7 @@
 #include "kprintf.h"
 
 #include "stdint.h"
+#include "stdarg.h"
 #include "hwio.h"
 
 typedef struct {
@@ -90,13 +91,95 @@ static void kprintf_put (char c) {
         kprintf_scroll(cursor.y-height);
 }
 
-int kprintf (const char* format, ...) {
-    int i;
+static int kprintf_putInt (int n) {
+    const int base = 10;
+
+    int printed = 0;
     
-    for (i = 0; format[i] != 0; i++)
-        kprintf_put(format[i]);
+    /*Negative?*/
+    if (n < 0) {
+        kprintf_put('-');
+        printed++;
+        n = -n;
+    }
+    
+    /*Work out how many digits there are*/
+    
+    int digits = 0;
+    
+    for (int copy = n; copy != 0; copy /= base)
+        digits++;
+        
+    printed += digits;
+    
+    /* */
+        
+    int divisor = 1;
+    
+    /*divisor = base^(digits-1)*/
+    for (int i = 1; i < digits; i++)
+        divisor *= base;
+        
+    while (n != 0) {
+        /*Quotient is the digit to be printed,
+          remainder is the number to use next*/
+        int lastdigit = n/divisor;
+        n %= divisor;
+        
+        divisor /= base;
+        
+        switch (lastdigit) {
+        case 0: kprintf_put('0'); break;
+        case 1: kprintf_put('1'); break;
+        case 2: kprintf_put('2'); break;
+        case 3: kprintf_put('3'); break;
+        case 4: kprintf_put('4'); break;
+        case 5: kprintf_put('5'); break;
+        case 6: kprintf_put('6'); break;
+        case 7: kprintf_put('7'); break;
+        case 8: kprintf_put('8'); break;
+        case 9: kprintf_put('9'); break;
+        case 10: kprintf_put('A'); break;
+        case 11: kprintf_put('B'); break;
+        case 12: kprintf_put('C'); break;
+        case 13: kprintf_put('D'); break;
+        case 14: kprintf_put('E'); break;
+        case 15: kprintf_put('F'); break;
+        default: kprintf("KPRINTF ERROR: putInt borked");
+        }
+    }
+        
+    return printed;
+}
+
+int kprintf (const char* format, ...) {
+    int printed = 0;
+    
+    va_list args;
+    va_start(args, format);
+    
+    for (int i = 0; format[i] != 0; i++) {
+        if (format[i] == '%') {
+            switch (format[++i]) {
+            case 'd': case 'i':
+                printed += kprintf_putInt(va_arg(args, int));
+            
+            break;
+            default:
+                kprintf_put('%');
+                kprintf_put(format[i]);
+                printed += 2;
+            }
+        
+        } else {
+            kprintf_put(format[i]);
+            printed++;
+        }
+    }
+    
+    va_end(args);
     
     kprintf_updateCursor();
     
-    return i;
+    return printed;
 }
