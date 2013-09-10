@@ -21,7 +21,7 @@ extern (C) void main (uint magic, uint addr) {
     gdt_init(); kprintf("GDT initialized\n");
     idt_init(); kprintf("IDT initialized\n");
     
-    timer_init(50); kprintf("Timer initialized\n");
+    timer_init(20); kprintf("Timer initialized\n");
     
     asm {
         sti;

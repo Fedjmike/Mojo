@@ -8,7 +8,8 @@ uint32_t tick = 0;
 
 static void timer_handler (isr_args args) {
     (void) args;
-    kprintf("Tick: %d\n", tick++);
+    if (tick++ % 10 == 0)
+        kprintf("Tick: %d\n", tick);
 }
 
 void timer_init (uint32_t freq) {
