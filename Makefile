@@ -2,6 +2,7 @@ OBJS = $(patsubst src/%.d, obj/%.d.o, $(wildcard src/*.d))
 OBJS += $(patsubst src/%.c, obj/%.c.o, $(wildcard src/*.c))
 OBJS += $(patsubst src/%.s, obj/%.s.o, $(wildcard src/*.s))
 OUT = bin/kernel
+IMG = bin/floppy.img
 
 AS = nasm
 ASFLAGS = -f elf
@@ -28,8 +29,16 @@ obj/%.s.o: src/%.s
 $(OUT): $(OBJS)
 	$(LD) $(LDFLAGS) $(OBJS) -o $(OUT)
     
+install:
+	sudo losetup /dev/loop0 $(IMG)
+	sudo mount /dev/loop0 /mnt
+	sudo cp $(OUT) /mnt/kernel
+	sudo umount /dev/loop0
+	sudo losetup -d /dev/loop0
+
+    
 clean:
 	rm -vrf obj/*
 	rm -vf $(OUT)
 
-.PHONY = all clean
+.PHONY = all install clean
