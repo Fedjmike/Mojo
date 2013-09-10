@@ -3,6 +3,10 @@ ENTRY (start)
 
 SECTIONS{
     . = 0x00100000;
+    
+    .mbheader : {
+        *(.mbheader)
+    }
 
     .text : {
         code = .; _code = .; __code = .;
