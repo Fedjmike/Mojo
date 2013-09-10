@@ -71,6 +71,7 @@ static void kprintf_put (char c) {
     case '\r':
         cursor.x = 0;
 
+    break;
     /*Newline*/
     case '\n':
         cursor = (position) {0, cursor.y+1};
@@ -88,7 +89,7 @@ static void kprintf_put (char c) {
         
     /*Scroll?*/
     if (cursor.y >= height)
-        kprintf_scroll(cursor.y-height);
+        kprintf_scroll(cursor.y-height+1);
 }
 
 static int kprintf_putInt (int n) {
@@ -105,9 +106,9 @@ static int kprintf_putInt (int n) {
     
     /*Work out how many digits there are*/
     
-    int digits = 0;
+    int digits = 1;
     
-    for (int copy = n; copy != 0; copy /= base)
+    for (int copy = n; copy >= base; copy /= base)
         digits++;
         
     printed += digits;
@@ -120,7 +121,7 @@ static int kprintf_putInt (int n) {
     for (int i = 1; i < digits; i++)
         divisor *= base;
         
-    while (n != 0) {
+    do {
         /*Quotient is the digit to be printed,
           remainder is the number to use next*/
         int lastdigit = n/divisor;
@@ -147,7 +148,7 @@ static int kprintf_putInt (int n) {
         case 15: kprintf_put('F'); break;
         default: kprintf("KPRINTF ERROR: putInt borked");
         }
-    }
+    } while (--digits);
         
     return printed;
 }
