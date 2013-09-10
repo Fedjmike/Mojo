@@ -1,5 +1,6 @@
 #include "kprintf.h"
 
+#include "std.h"
 #include "stdint.h"
 #include "stdarg.h"
 #include "hwio.h"
@@ -28,6 +29,9 @@ static void kprintf_updateCursor ();
 static void kprintf_scroll (int n);
 
 static void kprintf_put (char c);
+
+static int kprintf_putInt (int n, unsigned int base);
+static int kprintf_putUint (unsigned int n, unsigned int base);
 
 static void kprintf_updateCursor () {
     uint16_t loc = cursor.y*width + cursor.x;
@@ -92,9 +96,7 @@ static void kprintf_put (char c) {
         kprintf_scroll(cursor.y-height+1);
 }
 
-static int kprintf_putInt (int n) {
-    const int base = 10;
-
+static int kprintf_putInt (int n, unsigned int base) {
     int printed = 0;
     
     /*Negative?*/
@@ -104,11 +106,17 @@ static int kprintf_putInt (int n) {
         n = -n;
     }
     
+    return printed + kprintf_putUint(n, base);
+}
+
+static int kprintf_putUint (unsigned int n, unsigned int base) {
+    int printed = 0;
+    
     /*Work out how many digits there are*/
     
     int digits = 1;
     
-    for (int copy = n; copy >= base; copy /= base)
+    for (unsigned int copy = n; copy >= base; copy /= base)
         digits++;
         
     printed += digits;
@@ -129,25 +137,14 @@ static int kprintf_putInt (int n) {
         
         divisor /= base;
         
-        switch (lastdigit) {
-        case 0: kprintf_put('0'); break;
-        case 1: kprintf_put('1'); break;
-        case 2: kprintf_put('2'); break;
-        case 3: kprintf_put('3'); break;
-        case 4: kprintf_put('4'); break;
-        case 5: kprintf_put('5'); break;
-        case 6: kprintf_put('6'); break;
-        case 7: kprintf_put('7'); break;
-        case 8: kprintf_put('8'); break;
-        case 9: kprintf_put('9'); break;
-        case 10: kprintf_put('A'); break;
-        case 11: kprintf_put('B'); break;
-        case 12: kprintf_put('C'); break;
-        case 13: kprintf_put('D'); break;
-        case 14: kprintf_put('E'); break;
-        case 15: kprintf_put('F'); break;
-        default: kprintf("KPRINTF ERROR: putInt borked");
-        }
+        char digits[16] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+                           'A', 'B', 'C', 'D', 'E', 'F'};
+        
+        if (lastdigit < 16)
+            kprintf_put(digits[lastdigit]);
+            
+        else
+            kprintf("KPRINTF ERROR: putInt borked");
     } while (--digits);
         
     return printed;
@@ -161,14 +158,21 @@ int kprintf (const char* format, ...) {
     
     for (int i = 0; format[i] != 0; i++) {
         if (format[i] == '%') {
-            switch (format[++i]) {
-            case 'd': case 'i':
-                printed += kprintf_putInt(va_arg(args, int));
+            i++;
+            
+            switch (format[i]) {
+            case 'd':
+            case 'i':
+                printed += kprintf_putInt(va_arg(args, int), 10);
+                
+            break;
+            case 'p':
+                printed += kprintf_putUint(va_arg(args, int), 16);
             
             break;
             default:
                 kprintf_put('%');
-                kprintf_put(format[i]);
+                kprintf_put(format[i+1]);
                 printed += 2;
             }
         
