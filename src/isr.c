@@ -1,17 +1,41 @@
-#include "stdint.h"
+#include "isr.h"
 
+#include "stdint.h"
+#include "hwio.h"
 #include "kprintf.h"
 
-/**
- * Arguments given to handlers
- */
-typedef struct registers {
-    uint32_t ds;
-    uint32_t edi, esi, ebp, esp, ebx, edx, ecx, eax;
-    uint32_t intNo, errCode;
-    uint32_t eip, cs, eflags, userESP, ss;
-} registers;
+isr_handlerFn handlers[interruptNo];
 
-void isr_testHandler (registers regs) {
-    kprintf("recieved interrupt: %d\n", regs.intNo);
+static void isr_dispatch (isr_tag n, isr_args args);
+
+void isr_registerHandler (isr_tag n, isr_handlerFn handler) {
+    if (n < interruptNo)
+        handlers[n] = handler;
+    
+    else
+        kprintf("ISR ERROR: attempted to register interrupt #%d\n", n);
+}
+
+static void isr_dispatch (isr_tag n, isr_args args) {
+    if (handlers[n])
+        handlers[n](args);
+        
+    else
+        kprintf("ISR ERROR: no handler registered for interrupt #%d\n", n);
+}
+
+void isr_handler (isr_args args) {
+    isr_dispatch(args.intNo, args);
+}
+
+void irq_handler (isr_args args) {
+    /*Signal to the PICs (slave as well for the latter 8 IRQs) that it is handled*/
+    
+    if (args.intNo >= IRQ8)
+        hwio_out8(0xA0, 0x20);
+        
+    hwio_out8(0x20, 0x20);
+
+    /* */
+    isr_dispatch(args.intNo, args);
 }
