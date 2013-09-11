@@ -29,13 +29,14 @@ obj/%.s.o: src/%.s
 $(OUT): $(OBJS)
 	$(LD) $(LDFLAGS) $(OBJS) -o $(OUT)
     
-install:
-	sudo losetup /dev/loop0 $(IMG)
-	sudo mount /dev/loop0 /mnt
-	sudo cp $(OUT) /mnt/kernel
-	sudo umount /dev/loop0
-	sudo losetup -d /dev/loop0
-
+$(IMG): $(OUT)
+	losetup /dev/loop0 $(IMG)
+	mount /dev/loop0 /mnt
+	cp $(OUT) /mnt/kernel
+	umount /dev/loop0
+	losetup -d /dev/loop0
+    
+install: $(IMG)
     
 clean:
 	rm -vrf obj/*
