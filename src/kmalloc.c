@@ -2,24 +2,26 @@
 
 #include "stdint.h"
 
+/*From the linker script*/
+extern uint32_t end;
+void* address = &end;
+
 static uintptr_t kmalloc_align (uintptr_t ptr, int alignment);
 static void* kmalloc_impl (size_t size, int alignment, void** out);
 
 static uintptr_t kmalloc_align (uintptr_t ptr, int alignment) {
-    uintptr_t wipeoutmask = ~((1 << alignment) - 1);
+    uintptr_t wipeoutmask = ~(alignment-1);
     
     /*Not aligned already?*/
     if ((ptr & wipeoutmask) != ptr) {
         ptr &= wipeoutmask;
-        ptr += 1 << alignment;
+        ptr += alignment;
     }
     
     return ptr;
 }
 
 static void* kmalloc_impl (size_t size, int alignment, void** out) {
-    static void* address = (void*) 0x100000;
-    
     /*Align it upwards to the 2^alignment byte*/
     address = (void*) kmalloc_align((uintptr_t) address, alignment);
     
@@ -36,5 +38,9 @@ void* kmalloc_aligned (size_t size, int alignment) {
 
 void* kmalloc (size_t size) {
     void* tmp;
-    return kmalloc_impl(size, 0, &tmp);
+    return kmalloc_impl(size, 1, &tmp);
+}
+
+void* kmalloc_last () {
+    return address;
 }
