@@ -24,7 +24,7 @@ typedef struct idt_ptr {
 idt_entry idt_entries[256];
 idt_ptr idt;
 
-static idt_entry idt_entry_init (uint32_t base, uint16_t sel, uint8_t flags, bool usermode);
+static idt_entry idt_entryInit (uint32_t base, uint16_t sel, uint8_t flags, bool usermode);
 
 extern void idt_flush (uint32_t idt);
 
@@ -59,7 +59,7 @@ void idt_init () {
                             isr24, isr25, isr26, isr27, isr28, isr29, isr30, isr31};
 
     for (int i = 0; i < 32; i++)
-        idt_entries[i] = idt_entry_init((uint32_t) isrs[i], 0x08, 0x8E, false);
+        idt_entries[i] = idt_entryInit((uint32_t) isrs[i], 0x08, 0x8E, false);
 
     /*The following 16 IRQs*/
     
@@ -67,7 +67,7 @@ void idt_init () {
                             irq8, irq9, irq10, irq11, irq12, irq13, irq14};
 
     for (int i = 0; i < 15; i++)
-        idt_entries[32+i] = idt_entry_init((uint32_t) irqs[i], 0x08, 0x8E, false);
+        idt_entries[32+i] = idt_entryInit((uint32_t) irqs[i], 0x08, 0x8E, false);
         
     /*Flush the new IDT*/
     idt.limit = sizeof(idt_entries) - 1;
@@ -75,7 +75,7 @@ void idt_init () {
     idt_flush((uint32_t) &idt);
 }
 
-static idt_entry idt_entry_init (uint32_t base, uint16_t sel, uint8_t flags, bool usermode) {
+static idt_entry idt_entryInit (uint32_t base, uint16_t sel, uint8_t flags, bool usermode) {
     idt_entry entry;
     entry.base_lo = base & 0xFFFF;
     entry.base_hi = (base >> 16) & 0xFFFF;
