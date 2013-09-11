@@ -9,6 +9,8 @@ extern (C) void idt_init ();
 
 extern (C) void timer_init (int freq);
 
+extern (C) void paging_init ();
+
 extern (C) void main (uint magic, uint addr) {
     ubyte* vidmem = cast(ubyte*) 0xFFFF8000000B8000;
  
@@ -23,9 +25,14 @@ extern (C) void main (uint magic, uint addr) {
     
     timer_init(20); kprintf("Timer initialized\n");
     
+    paging_init(); kprintf("Paging initialized\n");
+    
     asm {
         sti;
     }
+    
+    int *ptr = cast(int*) 0xA0000000;
+    int fault = *ptr;
  
     for (;;)
         {}
