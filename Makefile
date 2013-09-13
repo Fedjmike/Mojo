@@ -3,6 +3,7 @@ OBJS += $(patsubst src/%.c, obj/%.c.o, $(wildcard src/*.c))
 OBJS += $(patsubst src/%.s, obj/%.s.o, $(wildcard src/*.s))
 OUT = bin/kernel
 IMG = bin/floppy.img
+MOUNT ?= cdrom
 
 AS = nasm
 ASFLAGS = -f elf
@@ -31,8 +32,9 @@ $(OUT): $(OBJS)
     
 $(IMG): $(OUT)
 	losetup /dev/loop0 $(IMG)
-	mount /dev/loop0 /mnt
-	cp $(OUT) /mnt/kernel
+	mkdir -p /mnt/$(MOUNT)
+	mount /dev/loop0 /mnt/$(MOUNT)
+	cp $(OUT) /mnt/$(MOUNT)/kernel
 	umount /dev/loop0
 	losetup -d /dev/loop0
     
